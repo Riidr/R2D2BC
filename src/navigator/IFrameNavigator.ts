@@ -977,6 +977,14 @@ export class IFrameNavigator extends EventEmitter implements Navigator {
           this
         );
       }
+      if (this.eventHandler) {
+        this.eventHandler.onInternalLink = this.handleInternalLink.bind(
+          this
+          );
+        this.eventHandler.onClickThrough = this.handleClickThrough.bind(
+          this
+        );
+      }
       if (this.touchEventHandler) {
         this.touchEventHandler.onBackwardSwipe = this.handlePreviousPageClick.bind(
           this
