@@ -192,7 +192,7 @@ export default class D2Reader {
        * generating them or fetching them from provided services.
        */
       if (rights.autoGeneratePositions) {
-        await publication.autoGeneratePositions(initialConfig.requestConfig);
+        await publication.autoGeneratePositions(initialConfig.requestConfig, initialConfig.contentBytesLengthService);
       } else {
         if (initialConfig.services?.positions) {
           await publication.fetchPositionsFromService(

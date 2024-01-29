@@ -216,6 +216,7 @@ export interface ReaderConfig {
   services?: PublicationServices;
   sample?: SampleRead;
   requestConfig?: RequestConfig;
+  contentBytesLengthService?: GetContentBytesLength;
 }
 
 /** Class that shows webpub resources in an iframe, with navigation controls outside the iframe. */
