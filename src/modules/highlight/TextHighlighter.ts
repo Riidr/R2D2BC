@@ -191,15 +191,17 @@ export class TextHighlighter {
     });
   }
   async initialize() {
-    let doc = this.navigator.iframes[0].contentDocument;
-    if (doc) {
-      this.dom(doc.body).addClass(this.options.contextClass);
+    for (let index = 0; index < this.navigator.iframes.length; index++) {
+      let doc = this.navigator.iframes[index].contentDocument;
+      if (doc) {
+        this.dom(doc.body).addClass(this.options.contextClass);
+      }
+      this.bindEvents(
+        this.navigator.iframes[index].contentDocument?.body,
+        this,
+        this.hasEventListener
+      );
     }
-    this.bindEvents(
-      this.navigator.iframes[0].contentDocument?.body,
-      this,
-      this.hasEventListener
-    );
 
     this.initializeToolbox();
 
