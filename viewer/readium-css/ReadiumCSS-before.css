@@ -304,7 +304,7 @@ math {
 
 /* /!\ Mind the path (relative to the folders in which you have stylesheets and the fonts) */
 
-@font-face {
+/* @font-face {
   font-family: AccessibleDfA;
   font-style: normal;
   font-weight: normal;
@@ -318,7 +318,7 @@ math {
   font-weight: normal;
   src: local("iAWriterDuospace-Regular"),
     url("fonts/iAWriterDuospace-Regular.ttf") format("truetype");
-}
+} */
 
 /* If you have different weights/styles,
    use `font-weight` and `font-style`,
