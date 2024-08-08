@@ -26,3 +26,4 @@ export const load = D2Reader.load;
 
 export { Link } from "./model/Link";
 export { Locator, ReadingPosition } from "./model/Locator";
+export { searchDocDomSeek } from "./modules/search/searchWithDomSeek";
