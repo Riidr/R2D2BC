@@ -4,10 +4,14 @@ import chalk from "chalk";
 import { promises as fs } from "fs";
 import { watch } from "chokidar";
 import { debounce } from "debounce";
-const copy = util.promisify(require("copy"));
-const rimraf = util.promisify(require("rimraf"));
-const exec = util.promisify(require("child_process").exec);
-const sass = util.promisify(require("sass").render);
+import copy0 from "copy";
+import child_process0 from "child_process";
+import sass0 from "sass";
+import { rimraf } from "rimraf";
+
+const copy = util.promisify(copy0);
+const exec = util.promisify(child_process0.exec);
+const sass = util.promisify(sass0.render);
 
 const isWatchEnabled = process.argv[2] === "-w";
 // for now, we bundle for production whenever we aren't in watch mode
@@ -100,6 +104,17 @@ async function copyJsInjectables() {
   }
 }
 
+async function copyViewerAssets() {
+  try {
+    await copy("viewer/fonts/**/*", "dist/viewer");
+    logBundled("Copied fonts", "dist/fonts/**/*");
+    await copy("viewer/readium-css/*", "dist/viewer/readium-css");
+    logBundled("copied readium-css styles", "dist/viewer/readium-css/*.css")
+  } catch (e) {
+    err("Viewer assets Copy Error: ", e);
+  }
+}
+
 /**
  * Build pipeline:
  *  - clean the build folder
@@ -172,8 +187,10 @@ async function buildAll() {
   // compile sass files into reader.css and material.css
   const p7 = compileCss("src/styles/sass/reader.scss", "reader");
 
+  const p8 = copyViewerAssets();
+
   // wait for everything to finish running in parallel
-  await Promise.all([p1, p2, p3, p4, p5, p6, p7]);
+  await Promise.all([p1, p2, p3, p4, p5, p6, p7, p8]);
   console.log("🔥 Build finished.");
 }
 
