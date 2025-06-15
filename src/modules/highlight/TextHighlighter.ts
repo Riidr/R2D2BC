@@ -191,16 +191,12 @@ export class TextHighlighter {
     });
   }
   async initialize() {
-    for (let index = 0; index < this.navigator.iframes.length; index++) {
-      let doc = this.navigator.iframes[index].contentDocument;
+    for (let iframeIndex = 0; iframeIndex < this.navigator.iframes.length; iframeIndex++) {
+      let doc = this.navigator.iframes[iframeIndex].contentDocument;
       if (doc) {
         this.dom(doc.body).addClass(this.options.contextClass);
       }
-      this.bindEvents(
-        this.navigator.iframes[index].contentDocument?.body,
-        this,
-        this.hasEventListener
-      );
+      this.bindEvents(iframeIndex, this.hasEventListener);
     }
 
     this.initializeToolbox();
@@ -644,7 +640,9 @@ export class TextHighlighter {
     return false;
   }
 
-  bindEvents(el: any, _scope: any, hasEventListener: boolean) {
+  bindEvents(iframeIndex: number, hasEventListener: boolean) {
+    let iframe = this.navigator.iframes[iframeIndex];
+    let el = iframe.contentDocument!.body;
     let doc = el.ownerDocument;
 
     el.addEventListener("mouseup", this.toolboxShowDelayed.bind(this));
