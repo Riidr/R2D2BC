@@ -989,7 +989,7 @@ function updateConfig(
   // Some settings must be disabled for fixed-layout publications
   // maybe we should warn the user we are disabling them here.
   if (publication.isFixedLayout) {
-    rights.enableAnnotations = false;
+    // rights.enableAnnotations = false;
     // rights.enableSearch = false;
     rights.enableTTS = false;
     rights.enableDefinitions = false;
