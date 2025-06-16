@@ -215,7 +215,7 @@ export class TextHighlighter {
       }
     }
     setTimeout(async () => {
-      let doc = this.navigator.iframes[0].contentDocument;
+      let doc = this.navigator.iframes[0].contentDocument;  // TODO: change to iframeIndex
       if (doc) {
         await doc.body?.addEventListener("click", unselect);
       }
@@ -645,17 +645,17 @@ export class TextHighlighter {
     let el = iframe.contentDocument!.body;
     let doc = el.ownerDocument;
 
-    el.addEventListener("mouseup", this.toolboxShowDelayed.bind(this));
-    el.addEventListener("touchend", this.toolboxShowDelayed.bind(this));
-    doc.addEventListener("mouseup", this.toolboxShowDelayed.bind(this));
-    doc.addEventListener("touchend", this.toolboxShowDelayed.bind(this));
-    // doc.addEventListener("selectstart", this.toolboxShowDelayed.bind(this));
+    el.addEventListener("mouseup", this.toolboxShowDelayed.bind(this, iframeIndex));
+    el.addEventListener("touchend", this.toolboxShowDelayed.bind(this, iframeIndex));
+    doc.addEventListener("mouseup", this.toolboxShowDelayed.bind(this, iframeIndex));
+    doc.addEventListener("touchend", this.toolboxShowDelayed.bind(this, iframeIndex));
+    // doc.addEventListener("selectstart", this.toolboxShowDelayed.bind(this, iframeIndex));
 
     if (!hasEventListener) {
-      window.addEventListener("resize", this.toolboxPlacement.bind(this));
+      window.addEventListener("resize", this.toolboxPlacement.bind(this, iframeIndex));
     }
-    doc.addEventListener("selectionchange", this.toolboxPlacement.bind(this));
-    doc.addEventListener("selectionchange", this.toolboxShowDelayed.bind(this));
+    doc.addEventListener("selectionchange", this.toolboxPlacement.bind(this, iframeIndex));
+    doc.addEventListener("selectionchange", this.toolboxShowDelayed.bind(this, iframeIndex));
 
     el.addEventListener("mousedown", this.toolboxHide.bind(this));
     el.addEventListener("touchstart", this.toolboxHide.bind(this));
@@ -664,63 +664,63 @@ export class TextHighlighter {
       el.addEventListener("contextmenu", this.disableContext);
     }
 
-    el.addEventListener("mousedown", this.mousedown.bind(this));
-    el.addEventListener("mouseup", this.mouseup.bind(this));
-    el.addEventListener("mousemove", this.mousemove.bind(this));
+    el.addEventListener("mousedown", this.mousedown.bind(this, iframeIndex));
+    el.addEventListener("mouseup", this.mouseup.bind(this, iframeIndex));
+    el.addEventListener("mousemove", this.mousemove.bind(this, iframeIndex));
 
-    el.addEventListener("touchstart", this.mousedown.bind(this));
-    el.addEventListener("touchend", this.mouseup.bind(this));
-    el.addEventListener("touchmove", this.mousemove.bind(this));
+    el.addEventListener("touchstart", this.mousedown.bind(this, iframeIndex));
+    el.addEventListener("touchend", this.mouseup.bind(this, iframeIndex));
+    el.addEventListener("touchmove", this.mousemove.bind(this, iframeIndex));
 
     this.hasEventListener = true;
   }
-  async mousedown(ev: MouseEvent) {
+  async mousedown(iframeIndex: number, ev: MouseEvent) {
     lastMouseDownX = ev.clientX;
     lastMouseDownY = ev.clientY;
   }
 
-  async mouseup(ev: MouseEvent) {
+  async mouseup(iframeIndex: number, ev: MouseEvent) {
     if (
       Math.abs(lastMouseDownX - ev.clientX) < 3 &&
       Math.abs(lastMouseDownY - ev.clientY) < 3
     ) {
-      await this.processMouseEvent(ev);
+      await this.processMouseEvent(iframeIndex, ev);
     }
   }
 
-  async mousemove(ev: MouseEvent) {
-    await this.processMouseEvent(ev);
+  async mousemove(iframeIndex: number, ev: MouseEvent) {
+    await this.processMouseEvent(iframeIndex, ev);
   }
 
   unbindEvents(el: any, _scope: any) {
     let doc = el.ownerDocument;
 
-    el.removeEventListener("mouseup", this.toolboxShowDelayed.bind(this));
-    el.removeEventListener("touchend", this.toolboxShowDelayed.bind(this));
-    doc.removeEventListener("mouseup", this.toolboxShowDelayed.bind(this));
-    doc.removeEventListener("touchend", this.toolboxShowDelayed.bind(this));
+    // el.removeEventListener("mouseup", this.toolboxShowDelayed.bind(this));
+    // el.removeEventListener("touchend", this.toolboxShowDelayed.bind(this));
+    // doc.removeEventListener("mouseup", this.toolboxShowDelayed.bind(this));
+    // doc.removeEventListener("touchend", this.toolboxShowDelayed.bind(this));
     // doc.removeEventListener("selectstart", this.toolboxShowDelayed.bind(this));
 
-    window.removeEventListener("resize", this.toolboxPlacement.bind(this));
-    doc.removeEventListener(
-      "selectionchange",
-      this.toolboxPlacement.bind(this)
-    );
+    // window.removeEventListener("resize", this.toolboxPlacement.bind(this));
+    // doc.removeEventListener(
+    //   "selectionchange",
+    //   this.toolboxPlacement.bind(this)
+    // );
 
-    el.removeEventListener("mousedown", this.toolboxHide.bind(this));
-    el.removeEventListener("touchstart", this.toolboxHide.bind(this));
+    // el.removeEventListener("mousedown", this.toolboxHide.bind(this));
+    // el.removeEventListener("touchstart", this.toolboxHide.bind(this));
 
     if (this.isAndroid()) {
       el.removeEventListener("contextmenu", this.disableContext);
     }
 
-    el.removeEventListener("mousedown", this.mousedown.bind(this));
-    el.removeEventListener("mouseup", this.mouseup.bind(this));
-    el.removeEventListener("mousemove", this.mousemove.bind(this));
+    // el.removeEventListener("mousedown", this.mousedown.bind(this));
+    // el.removeEventListener("mouseup", this.mouseup.bind(this));
+    // el.removeEventListener("mousemove", this.mousemove.bind(this));
 
-    el.removeEventListener("touchstart", this.mousedown.bind(this));
-    el.removeEventListener("touchend", this.mouseup.bind(this));
-    el.removeEventListener("touchmove", this.mousemove.bind(this));
+    // el.removeEventListener("touchstart", this.mousedown.bind(this));
+    // el.removeEventListener("touchend", this.mouseup.bind(this));
+    // el.removeEventListener("touchmove", this.mousemove.bind(this));
 
     this.hasEventListener = false;
   }
@@ -730,9 +730,9 @@ export class TextHighlighter {
    * Unbinds events and remove context element class.
    * @memberof TextHighlighter
    */
-  destroy() {
+  destroy(iframeIndex: number) {
     this.toolboxHide();
-    let doc = this.navigator.iframes[0].contentDocument;
+    let doc = this.navigator.iframes[iframeIndex].contentDocument;
     if (doc) {
       this.unbindEvents(doc.body, this);
       this.dom(doc.body).removeClass(this.options.contextClass);
@@ -927,23 +927,23 @@ export class TextHighlighter {
 
   // Use short timeout to let the selection updated to 'finish', otherwise some
   // browsers can get wrong or incomplete selection data.
-  toolboxShowDelayed(event: TouchEvent | MouseEvent) {
-    this.showTool(event.detail === 1);
+  toolboxShowDelayed(iframeIndex: number, event: TouchEvent | MouseEvent) {
+    this.showTool(iframeIndex, event.detail === 1);
   }
 
   showTool = debounce(
-    (b: boolean) => {
+    (iframeIndex: number, b: boolean) => {
       if (!this.isAndroid()) {
-        this.snapSelectionToWord(b);
+        this.snapSelectionToWord(iframeIndex, b);
       }
-      this.toolboxShow();
+      this.toolboxShow(iframeIndex);
     },
     navigator.userAgent.toLowerCase().indexOf("firefox") > -1 ? 200 : 100
   );
 
-  snapSelectionToWord(trimmed: boolean = false) {
+  snapSelectionToWord(iframeIndex: number, trimmed: boolean = false) {
     let self = this;
-    let doc = this.navigator.iframes[0].contentDocument;
+    let doc = this.navigator.iframes[iframeIndex].contentDocument;
     if (doc) {
       let selection = self.dom(doc.body)?.getSelection();
       // Check for existence of window.getSelection() and that it has a
@@ -1024,14 +1024,14 @@ export class TextHighlighter {
     }
   }
 
-  toolboxShow() {
+  toolboxShow(iframeIndex: number) {
     if (this.activeAnnotationMarkerId === undefined) {
       let self = this;
       let toolboxAddOptions = document.getElementById(
         "highlight-toolbox-mode-add"
       );
       let range = this.dom(
-        this.navigator.iframes[0].contentDocument?.body
+        this.navigator.iframes[iframeIndex].contentDocument?.body
       ).getRange();
 
       if ((!range || range.collapsed) && toolboxAddOptions) {
@@ -1044,7 +1044,7 @@ export class TextHighlighter {
 
       if (this.isIOS()) {
         setTimeout(function () {
-          let doc = self.navigator.iframes[0].contentDocument;
+          let doc = self.navigator.iframes[iframeIndex].contentDocument;
           if (doc) {
             let selection = self.dom(doc.body).getSelection();
             selection.removeAllRanges();
@@ -1059,7 +1059,7 @@ export class TextHighlighter {
                     return _blacklistIdClassForCssSelectors.indexOf(str) < 0;
                   },
                 };
-                let doc = self.navigator.iframes[0].contentDocument;
+                let doc = self.navigator.iframes[iframeIndex].contentDocument;
                 if (doc) {
                   return uniqueCssSelector(element, doc, options);
                 } else {
@@ -1067,7 +1067,7 @@ export class TextHighlighter {
                 }
               }
 
-              let win = self.navigator.iframes[0].contentWindow;
+              let win = self.navigator.iframes[iframeIndex].contentWindow;
               const selectionInfo = getCurrentSelectionInfo(
                 win!,
                 getCssSelector
@@ -1080,8 +1080,8 @@ export class TextHighlighter {
         }, 100);
       }
 
-      this.toolboxPlacement();
-      this.toolboxHandler();
+      this.toolboxPlacement(iframeIndex);
+      this.toolboxHandler(iframeIndex);
     }
   }
 
@@ -1105,9 +1105,9 @@ export class TextHighlighter {
     if (this.api?.selection) this.api?.selection(text, selection);
   }, 100);
 
-  toolboxPlacement() {
+  toolboxPlacement(iframeIndex: number) {
     let range = this.dom(
-      this.navigator.iframes[0].contentDocument?.body
+      this.navigator.iframes[iframeIndex].contentDocument?.body
     ).getRange();
     if (!range || range.collapsed) {
       return;
@@ -1145,7 +1145,7 @@ export class TextHighlighter {
     }
   }
 
-  toolboxHandler() {
+  toolboxHandler(iframeIndex: number) {
     let toolbox = document.getElementById("highlight-toolbox");
     if (toolbox) {
       if (getComputedStyle(toolbox).display === "none") {
@@ -1206,7 +1206,7 @@ export class TextHighlighter {
           }
           if (highlightIcon) {
             function highlightEvent() {
-              self.doHighlight(false, AnnotationMarker.Highlight);
+              self.doHighlight(iframeIndex,false, AnnotationMarker.Highlight);
               self.toolboxHide();
               highlightIcon?.removeEventListener("click", highlightEvent);
             }
@@ -1217,7 +1217,7 @@ export class TextHighlighter {
           }
           if (underlineIcon) {
             function commentEvent() {
-              self.doHighlight(false, AnnotationMarker.Underline);
+              self.doHighlight(iframeIndex, false, AnnotationMarker.Underline);
               self.toolboxHide();
               underlineIcon?.removeEventListener("click", commentEvent);
             }
@@ -1228,7 +1228,7 @@ export class TextHighlighter {
           }
           if (noteIcon) {
             function commentEvent() {
-              self.doHighlight(false, AnnotationMarker.Comment);
+              self.doHighlight(iframeIndex, false, AnnotationMarker.Comment);
               self.toolboxHide();
               noteIcon?.removeEventListener("click", commentEvent);
             }
@@ -1258,7 +1258,7 @@ export class TextHighlighter {
           if (speakIcon) {
             function speakEvent() {
               speakIcon?.removeEventListener("click", speakEvent);
-              self.speak();
+              self.speak(iframeIndex);
             }
             const clone = speakIcon.cloneNode(true);
             speakIcon?.parentNode?.replaceChild(clone, speakIcon);
@@ -1291,7 +1291,7 @@ export class TextHighlighter {
                     return _blacklistIdClassForCssSelectors.indexOf(str) < 0;
                   },
                 };
-                let doc = self.navigator.iframes[0].contentDocument;
+                let doc = self.navigator.iframes[iframeIndex].contentDocument;
                 if (doc) {
                   return uniqueCssSelector(element, doc, options);
                 } else {
@@ -1299,14 +1299,14 @@ export class TextHighlighter {
                 }
               }
 
-              let win = self.navigator.iframes[0].contentWindow;
+              let win = self.navigator.iframes[iframeIndex].contentWindow;
               if (win) {
                 let selectionInfo = getCurrentSelectionInfo(
                   win,
                   getCssSelector
                 );
                 if (selectionInfo === undefined) {
-                  let doc = self.navigator.iframes[0].contentDocument;
+                  let doc = self.navigator.iframes[iframeIndex].contentDocument;
                   selectionInfo = self.navigator.annotationModule?.annotator?.getTemporarySelectionInfo(
                     doc
                   );
@@ -1330,7 +1330,7 @@ export class TextHighlighter {
                       (marker === AnnotationMarker.Bookmark &&
                         self.navigator.rights.enableBookmarks)
                     ) {
-                      let doc = self.navigator.iframes[0].contentDocument;
+                      let doc = self.navigator.iframes[iframeIndex].contentDocument;
                       if (doc) {
                         let highlight = self.createHighlight(
                           self.dom(doc.body).getWindow(),
@@ -1375,7 +1375,7 @@ export class TextHighlighter {
                   }
                 }
               }
-              self.callbackComplete();
+              self.callbackComplete(iframeIndex);
             }
             if (itemElement) {
               const clone = itemElement.cloneNode(true);
@@ -1395,7 +1395,7 @@ export class TextHighlighter {
    * @param marker
    * @memberof TextHighlighter
    */
-  doHighlight(keepRange?: boolean, marker?: AnnotationMarker) {
+  doHighlight(iframeIndex: number, keepRange?: boolean, marker?: AnnotationMarker) {
     let self = this;
     function getCssSelector(element: Element): string | undefined {
       const options = {
@@ -1406,19 +1406,19 @@ export class TextHighlighter {
           return _blacklistIdClassForCssSelectors.indexOf(str) < 0;
         },
       };
-      let doc = self.navigator.iframes[0].contentDocument;
+      let doc = self.navigator.iframes[iframeIndex].contentDocument;
       if (doc) {
         return uniqueCssSelector(element, doc, options);
       } else {
         return undefined;
       }
     }
-    let win = self.navigator.iframes[0].contentWindow;
+    let win = self.navigator.iframes[iframeIndex].contentWindow;
     if (win) {
       let selectionInfo = getCurrentSelectionInfo(win, getCssSelector);
 
       if (selectionInfo === undefined) {
-        let doc = self.navigator.iframes[0].contentDocument;
+        let doc = self.navigator.iframes[iframeIndex].contentDocument;
         selectionInfo = this.navigator.annotationModule?.annotator?.getTemporarySelectionInfo(
           doc
         );
@@ -1431,7 +1431,7 @@ export class TextHighlighter {
           if (TextHighlighter.isHexColor(createColor)) {
             createColor = TextHighlighter.hexToRgbChannels(createColor);
           }
-          let doc = self.navigator.iframes[0].contentDocument;
+          let doc = self.navigator.iframes[iframeIndex].contentDocument;
           if (doc) {
             let highlight = this.createHighlight(
               self.dom(doc.body).getWindow(),
@@ -1459,20 +1459,20 @@ export class TextHighlighter {
 
         if (!keepRange) {
           this.dom(
-            this.navigator.iframes[0].contentDocument?.body
+            this.navigator.iframes[iframeIndex].contentDocument?.body
           ).removeAllRanges();
         }
       } else {
         if (!keepRange) {
           this.dom(
-            this.navigator.iframes[0].contentDocument?.body
+            this.navigator.iframes[iframeIndex].contentDocument?.body
           ).removeAllRanges();
         }
       }
     }
   }
 
-  speak() {
+  speak(iframeIndex: number) {
     if (this.navigator.rights.enableTTS) {
       let self = this;
       function getCssSelector(element: Element): string | undefined {
@@ -1484,18 +1484,18 @@ export class TextHighlighter {
             return _blacklistIdClassForCssSelectors.indexOf(str) < 0;
           },
         };
-        let doc = self.navigator.iframes[0].contentDocument;
+        let doc = self.navigator.iframes[iframeIndex].contentDocument;
         if (doc) {
           return uniqueCssSelector(element, doc, options);
         } else {
           return undefined;
         }
       }
-      let win = self.navigator.iframes[0].contentWindow;
+      let win = self.navigator.iframes[iframeIndex].contentWindow;
       if (win) {
         let selectionInfo = getCurrentSelectionInfo(win, getCssSelector);
         if (selectionInfo === undefined) {
-          let doc = self.navigator.iframes[0].contentDocument;
+          let doc = self.navigator.iframes[iframeIndex].contentDocument;
           selectionInfo = self.navigator.annotationModule?.annotator?.getTemporarySelectionInfo(
             doc
           );
@@ -1509,7 +1509,7 @@ export class TextHighlighter {
           );
         }
       }
-      let doc = self.navigator.iframes[0].contentDocument;
+      let doc = self.navigator.iframes[iframeIndex].contentDocument;
       if (doc) {
         const selection = self.dom(doc.body).getSelection();
         selection.removeAllRanges();
@@ -1527,9 +1527,9 @@ export class TextHighlighter {
     }
   }
 
-  callbackComplete() {
+  callbackComplete(iframeIndex: number) {
     this.toolboxHide();
-    let doc = this.navigator.iframes[0].contentDocument;
+    let doc = this.navigator.iframes[iframeIndex].contentDocument;
     if (doc) {
       this.dom(doc.body).removeAllRanges();
     }
@@ -1576,7 +1576,7 @@ export class TextHighlighter {
   }
 
   get visibleTextRects() {
-    let doc = this.navigator.iframes[0].contentDocument;
+    let doc = this.navigator.iframes[0].contentDocument;  // NOTE: don't change to iframeIndex
     if (doc) {
       const body = HTMLUtilities.findRequiredIframeElement(
         doc,
@@ -1876,8 +1876,8 @@ export class TextHighlighter {
     );
   }
 
-  resetHighlightAreaStyle(highlightArea: HTMLElement, id_container: string) {
-    let doc = this.navigator.iframes[0].contentWindow?.document;
+  resetHighlightAreaStyle(iframeIndex: number, highlightArea: HTMLElement, id_container: string) {
+    let doc = this.navigator.iframes[iframeIndex].contentWindow?.document;
     const id =
       highlightArea.parentNode &&
       highlightArea.parentNode.nodeType === Node.ELEMENT_NODE &&
@@ -2141,7 +2141,7 @@ export class TextHighlighter {
   }
 
   setAndResetSearchHighlight(highlight, highlights) {
-    let doc = this.navigator.iframes[0].contentWindow?.document as any;
+    let doc = this.navigator.iframes[0].contentWindow?.document as any;  // NOTE: don't change to iframeIndex
 
     const allHighlightAreas = Array.from(
       doc
@@ -2263,8 +2263,8 @@ export class TextHighlighter {
     }
   };
 
-  async processMouseEvent(ev: MouseEvent) {
-    const doc = this.navigator.iframes[0].contentWindow?.document;
+  async processMouseEvent(iframeIndex: number, ev: MouseEvent) {
+    const doc = this.navigator.iframes[iframeIndex].contentWindow?.document;
     // relative to fixed window top-left corner
     // (unlike pageX/Y which is relative to top-left rendered content area, subject to scrolling)
     const x = ev.clientX;
@@ -2349,7 +2349,7 @@ export class TextHighlighter {
             container.querySelectorAll(`.${CLASS_HIGHLIGHT_AREA}`)
           );
           for (const highlightArea of allHighlightAreas) {
-            this.resetHighlightAreaStyle(highlightArea as HTMLElement, id);
+            this.resetHighlightAreaStyle(iframeIndex, highlightArea as HTMLElement, id);
           }
         }
       }
@@ -2374,7 +2374,7 @@ export class TextHighlighter {
             );
             for (const highlightArea of allHighlightAreas) {
               if (foundElementHighlightAreas.indexOf(highlightArea) < 0) {
-                this.resetHighlightAreaStyle(highlightArea as HTMLElement, id);
+                this.resetHighlightAreaStyle(iframeIndex, highlightArea as HTMLElement, id);
               }
             }
           }
@@ -2635,7 +2635,7 @@ export class TextHighlighter {
   }
 
   destroyHighlights(type: HighlightType) {
-    let doc = this.navigator.iframes[0].contentWindow?.document;
+    let doc = this.navigator.iframes[0].contentWindow?.document;  // NOTE: don't change to iframeIndex
     if (doc) {
       let container;
       switch (type) {
@@ -3008,7 +3008,7 @@ export class TextHighlighter {
         highlightParent.append(highlightAreaLine);
       }
 
-      let viewportWidth = this.navigator.iframes[0].contentWindow?.innerWidth;
+      let viewportWidth = this.navigator.iframes[0].contentWindow?.innerWidth;  // NOTE: don't change to iframeIndex
       let columnCount = parseInt(
         getComputedStyle(doc.documentElement).getPropertyValue("column-count")
       );
@@ -3053,7 +3053,7 @@ export class TextHighlighter {
         addRight;
 
       let pagemargin = parseInt(
-        this.navigator.iframes[0].contentDocument!!.documentElement.style.getPropertyValue(
+        this.navigator.iframes[0].contentDocument!!.documentElement.style.getPropertyValue(  // NOTE: don't change to iframeIndex
           "--USER__pageMargins"
         )
       );
@@ -3065,13 +3065,13 @@ export class TextHighlighter {
       if (!paginated) {
         left = parseInt(
           getComputedStyle(
-            this.navigator.iframes[0].contentDocument?.body!!
+            this.navigator.iframes[0].contentDocument?.body!!  // NOTE: don't change to iframeIndex
           ).width.replace("px", "")
         );
         right =
           parseInt(
             getComputedStyle(
-              this.navigator.iframes[0].contentDocument?.body!!
+              this.navigator.iframes[0].contentDocument?.body!!  // NOTE: don't change to iframeIndex
             ).width.replace("px", "")
           ) - pageWidth;
 
@@ -3112,7 +3112,7 @@ export class TextHighlighter {
         "style",
         `position: absolute;top:${position}px;left:${
           right +
-          this.navigator.iframes[0].contentDocument?.scrollingElement
+          this.navigator.iframes[0].contentDocument?.scrollingElement  // NOTE: don't change to iframeIndex
             ?.scrollLeft
         }px;height:${size}px; width:${size}px;`
       );
@@ -3165,7 +3165,7 @@ export class TextHighlighter {
           "style",
           `position: absolute;top:${position}px;left:${
             left +
-            this.navigator.iframes[0].contentDocument?.scrollingElement
+            this.navigator.iframes[0].contentDocument?.scrollingElement  // NOTE: don't change to iframeIndex
               ?.scrollLeft
           }px;height:${size}px; width:${size}px;`
         );
@@ -3174,7 +3174,7 @@ export class TextHighlighter {
           "style",
           `position: absolute;top:${position}px;left:${
             left +
-            this.navigator.iframes[0].contentDocument?.scrollingElement
+            this.navigator.iframes[0].contentDocument?.scrollingElement  // NOTE: don't change to iframeIndex
               ?.scrollLeft
           }px;height:${size}px; width:${size}px;`
         );
