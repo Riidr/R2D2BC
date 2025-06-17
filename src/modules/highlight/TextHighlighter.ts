@@ -2370,9 +2370,16 @@ export class TextHighlighter {
           let toolbox = document.getElementById("highlight-toolbox");
 
           if (toolbox) {
-            toolbox.style.top =
-              ev.clientY + (this.navigator.attributes?.navHeight ?? 0) + "px";
-            toolbox.style.left = ev.clientX + "px";
+            if (this.navigator.view.layout === "fixed") {
+              let rect = foundElement.getBoundingClientRect();
+              let iframeRect = this.navigator.iframes[0].getBoundingClientRect();
+              toolbox.style.position = "absolute";
+              toolbox.style.top = iframeRect.top + rect.top + "px";
+              toolbox.style.left = iframeRect.left + (rect.right - rect.left) / 2 + rect.left + "px";    
+            } else {
+              toolbox.style.top = ev.clientY + (this.navigator.attributes?.navHeight ?? 0) + "px";
+              toolbox.style.left = ev.clientX + "px";
+            }
 
             if (getComputedStyle(toolbox).display === "none") {
               toolbox.style.display = "block";
