@@ -1122,13 +1122,14 @@ export class TextHighlighter {
   }, 100);
 
   toolboxPlacement() {
-    let range = this.dom(
-      this.navigator.iframes[0].contentDocument?.body
+    let iframe = this.navigator.iframes[0];
+    let range = this.dom(iframe.contentDocument?.body
     ).getRange();
     if (!range || range.collapsed) {
       return;
     }
 
+    let iframeRect = iframe.getBoundingClientRect();
     let rect = range.getBoundingClientRect();
     let toolbox = document.getElementById("highlight-toolbox");
 
@@ -1149,14 +1150,19 @@ export class TextHighlighter {
         toolbox.style.position = "absolute";
         toolbox.style.setProperty("--content", "revert");
       } else {
-        const paginated = this.navigator.view?.isPaginated();
-        if (paginated) {
-          toolbox.style.top =
-            rect.top + (this.navigator.attributes?.navHeight ?? 0) + "px";
+        if (this.navigator.view.layout === "fixed") {
+          toolbox.style.top = iframeRect.top + rect.top + "px";
+          toolbox.style.left = iframeRect.left + (rect.right - rect.left) / 2 + rect.left + "px";
         } else {
-          toolbox.style.top = rect.top + "px";
+          const paginated = this.navigator.view?.isPaginated();
+          if (paginated) {
+            toolbox.style.top =
+              rect.top + (this.navigator.attributes?.navHeight ?? 0) + "px";
+          } else {
+            toolbox.style.top = rect.top + "px";
+          }
+          toolbox.style.left = (rect.right - rect.left) / 2 + rect.left + "px";
         }
-        toolbox.style.left = (rect.right - rect.left) / 2 + rect.left + "px";
       }
     }
   }
