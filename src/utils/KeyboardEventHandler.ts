@@ -49,6 +49,7 @@ export default class KeyboardEventHandler {
   public keydown = (element: HTMLElement | Document): void => {
     const self = this;
     if (!this.navigator.rights.customKeyboardEvents) {
+        console.log('adding keydown event listener'); // TODO remove
       element.addEventListener(
         "keydown",
         function (event: KeyboardEvent) {
