@@ -104,6 +104,8 @@ export type GetContentBytesLength = (
   requestConfig?: RequestConfig
 ) => Promise<number>;
 
+export type KeyDownThroughHandler = (event: KeyboardEvent) => boolean | void;
+
 export interface RequestConfig extends RequestInit {
   encoded?: boolean;
 }
@@ -2461,6 +2463,8 @@ export class IFrameNavigator extends EventEmitter implements Navigator {
   }
 
   private handleClickThrough(_event: MouseEvent | TouchEvent) {}
+
+  public handleKeyDownThrough: KeyDownThroughHandler = () => false;
 
   private handleInternalLink(event: MouseEvent | TouchEvent) {
     const element = event.target;

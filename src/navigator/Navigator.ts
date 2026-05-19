@@ -18,12 +18,14 @@
  */
 
 import { Locator } from "../model/Locator";
-import { IFrameAttributes } from "./IFrameNavigator";
+import {IFrameAttributes, KeyDownThroughHandler} from "./IFrameNavigator";
 
 interface Navigator {
   publication: any;
   rights?: any;
   hasMediaOverlays?: any;
+
+  handleKeyDownThrough?: KeyDownThroughHandler;
 
   addListener?(argument: any, argument2: any): void;
 

@@ -67,6 +67,10 @@ export default class KeyboardEventHandler {
             return;
           }
 
+          if (self.navigator.handleKeyDownThrough?.(event) === true) {
+            return;
+          }
+
           const key = event.key;
           switch (key) {
             case "ArrowRight":
