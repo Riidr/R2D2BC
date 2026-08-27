@@ -2471,7 +2471,14 @@ export class IFrameNavigator extends EventEmitter implements Navigator {
     let locations: Locations = {
       progression: 0,
     };
-    const linkElement = element as HTMLAnchorElement;
+    // The click may have landed on a child of the anchor, so climb to the
+    // anchor itself rather than assuming the target is one.
+    const linkElement = (element as HTMLElement)?.closest?.(
+      "a"
+    ) as HTMLAnchorElement | null;
+    if (!linkElement) {
+      return;
+    }
     if (linkElement.href.indexOf("#") !== -1) {
       const elementId = linkElement.href.slice(
         linkElement.href.indexOf("#") + 1

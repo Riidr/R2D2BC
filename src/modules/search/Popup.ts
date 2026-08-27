@@ -28,7 +28,7 @@ export class Popup {
     this.navigator = navigator;
   }
 
-  async handleFootnote(link: HTMLLIElement, event: MouseEvent | TouchEvent) {
+  async handleFootnote(link: HTMLElement, event: MouseEvent | TouchEvent) {
     const href = link.getAttribute("href");
     if (href && href.indexOf("#") > 0) {
       const id = href.substring(href.indexOf("#") + 1);
@@ -94,7 +94,12 @@ export class Popup {
       return new URL(href, currentUrl).href;
     }
     if (href) {
-      let absolute = getAbsoluteHref(href);
+      // The fragment identifies a position inside the resource rather than the
+      // resource itself, so it is kept aside and applied once the content is in.
+      const hashIndex = href.indexOf("#");
+      const fragment = hashIndex !== -1 ? href.slice(hashIndex + 1) : undefined;
+      const resourceHref = hashIndex !== -1 ? href.slice(0, hashIndex) : href;
+      let absolute = getAbsoluteHref(resourceHref);
       if (absolute) {
         event.preventDefault();
         event.stopPropagation();
@@ -127,7 +132,7 @@ export class Popup {
         d2content.className = "d2-popover-content";
         d2wrapper.appendChild(d2content);
         if (this.navigator.api?.getContent) {
-          await this.navigator.api?.getContent(href).then((content) => {
+          await this.navigator.api?.getContent(resourceHref).then((content) => {
             d2content.innerHTML = content;
             let doc = this.navigator.iframes[0].contentDocument;
             if (doc) {
@@ -145,6 +150,8 @@ export class Popup {
               }
             });
         }
+
+        this.scrollToFragment(d2content, fragment);
 
         let win = this.navigator.iframes[0].contentWindow;
         if (!win) {
@@ -287,6 +294,28 @@ export class Popup {
       }
     };
   }
+  /**
+   * Brings the linked fragment into view inside the overlay. Without this the
+   * overlay opens at the top of the resource, which for a shared endnotes file
+   * is rarely the note that was clicked.
+   */
+  private scrollToFragment(container: HTMLElement, fragment?: string) {
+    if (!fragment) {
+      return;
+    }
+    // An attribute selector rather than "#id", so that ids starting with a
+    // digit or holding punctuation still match.
+    const target = container.querySelector(
+      '[id="' + fragment.replace(/"/g, '\\"') + '"]'
+    );
+    if (!target) {
+      return;
+    }
+    container.scrollTop +=
+      target.getBoundingClientRect().top -
+      container.getBoundingClientRect().top;
+  }
+
   private getScrollingElement = (doc: Document): Element => {
     if (doc.scrollingElement) {
       return doc.scrollingElement;

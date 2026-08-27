@@ -133,50 +133,52 @@ export default class EventHandler {
     log.log("R2 Click Handler");
 
     const link = this.checkForLink(event);
-    if (link) {
-      // Open external links in new tabs.
-      const isSameOrigin =
-        window.location.protocol === link.protocol &&
-        window.location.port === link.port &&
-        window.location.hostname === link.hostname;
-
-      // If epub is hosted, rather than streamed, links to a resource inside the same epub should not be opened externally.
-      const isEpubInternal = this.isReadingOrderInternal(link);
-
-      const isResourceInternal = this.isResourceInternal(link);
-      if (!isResourceInternal) {
-        await this.popup.hidePopover();
-      }
-
-      const isInternal = link.href.indexOf("#");
-      if (!isEpubInternal && !isResourceInternal) {
-        window.open(link.href, link.target ?? "_blank");
-        event.preventDefault();
-        event.stopPropagation();
-      } else {
-        (event.target as HTMLAnchorElement).href = link.href;
-        if ((isSameOrigin || isEpubInternal) && isInternal !== -1) {
-          const link = event.target as HTMLLIElement;
-          if (link) {
-            const attribute = link.getAttribute("epub:type") === "noteref";
-            if (attribute) {
-              await this.popup.handleFootnote(link, event);
-            } else if (isResourceInternal && !isEpubInternal) {
-              await this.popup.showPopover(link, event);
-            } else {
-              this.onInternalLink(event);
-            }
-          } else {
-            this.onInternalLink(event);
-          }
-        } else if ((isSameOrigin || isEpubInternal) && isInternal === -1) {
-          // TODO needs some more refactoring when handling other types of links or elements
-          // link.click();
-          this.onInternalLink(event);
-        }
-      }
-    } else {
+    if (!link) {
       this.onClickThrough(event);
+      return;
     }
+
+    // If epub is hosted, rather than streamed, links to a resource inside the same epub should not be opened externally.
+    const isEpubInternal = this.isReadingOrderInternal(link);
+    const isResourceInternal = this.isResourceInternal(link);
+
+    if (!isResourceInternal) {
+      await this.popup.hidePopover();
+    }
+
+    // Open external links in new tabs. Whether a link belongs to the
+    // publication is decided by the manifest alone, never by the origin it is
+    // served from, which is unrelated when the content is hosted separately.
+    if (!isEpubInternal && !isResourceInternal) {
+      window.open(link.href, link.target ?? "_blank");
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    // Resolve the href in place so the popup can fetch it without having to
+    // guess the base the resource was loaded with.
+    link.setAttribute("href", link.href);
+
+    const isNoteRef = link.getAttribute("epub:type") === "noteref";
+
+    // A resource that belongs to the publication but is absent from the
+    // reading order (endnotes, a glossary) cannot be paged to, so it is shown
+    // in an overlay on top of the current page instead of being navigated to.
+    if (isResourceInternal && !isEpubInternal) {
+      if (isNoteRef) {
+        await this.popup.handleFootnote(link, event);
+      } else {
+        await this.popup.showPopover(link, event);
+      }
+      return;
+    }
+
+    if (isNoteRef && link.href.indexOf("#") !== -1) {
+      await this.popup.handleFootnote(link, event);
+      return;
+    }
+
+    this.onInternalLink(event);
   };
 }
