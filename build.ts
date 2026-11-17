@@ -42,7 +42,8 @@ async function buildTs(
     bundle: true,
     // what browsers we want to support, this is basically all >1% usage
     target: ["chrome89", "firefox88", "safari14", "edge90"],
-    sourcemap: true,
+    // no source maps in production: dist/ is committed, so keep it small
+    sourcemap: !isProduction,
     // we include some node.js polyfills
     inject: ["./polyfills.js"],
     define: {
@@ -70,7 +71,7 @@ async function buildTs(
 async function compileCss(input: string, filename: string) {
   const options = {
     file: input,
-    sourceMap: true,
+    sourceMap: !isProduction,
     outFile: `dist/${filename}.css`,
     bundle: false,
     outputStyle: "compressed",
@@ -78,9 +79,11 @@ async function compileCss(input: string, filename: string) {
   try {
     const result = await sass(options);
     const fullPath = `dist/${filename}`;
-    const p1 = fs.writeFile(`${fullPath}.css`, result.css);
-    const p2 = fs.writeFile(`${fullPath}.css.map`, result.map);
-    await Promise.all([p1, p2]);
+    const writes = [fs.writeFile(`${fullPath}.css`, result.css)];
+    if (result.map) {
+      writes.push(fs.writeFile(`${fullPath}.css.map`, result.map));
+    }
+    await Promise.all(writes);
     logBundled("Compiled SASS", `${fullPath}.css`);
   } catch (e) {
     err(`CSS Error (${input})`, e);
