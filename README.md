@@ -4,6 +4,24 @@
 
 # R2D2BC
 
+> **`audiorista` branch: `dist/` is committed.** Pubfront's web-app installs this branch straight from git
+> (`"@d-i-t-a/reader": "https://github.com/Riidr/R2D2BC#audiorista"`) and uses the committed `dist/` as is.
+> Nothing is built during that install, so a change only reaches web-app once its build is committed.
+>
+> - **Rebuild `dist/` in the same commit as every source change** (`src/`, `injectables/`, `viewer/`, styles,
+>   `build.ts`, bundled dependencies): run `npm run build:dist`, which clears `dist/`, runs the production build and
+>   stages the result. Build with Node 22 (some bundled dependencies need it) after `npm ci`, so the bundled
+>   versions match `package-lock.json`.
+> - **Don't add a `prepare` script.** Yarn 1 runs a git dependency's `prepare` inside the consumer's install: a
+>   second, unlocked install of this package's devDependencies plus a build, sharing the consumer's cache. On a cold
+>   cache that fails at random (it broke web-app's Netlify builds).
+> - **Every dependency is a devDependency.** esbuild bundles everything into `dist/`, so consumers need nothing
+>   else installed. Keep `dependencies` empty, otherwise web-app installs them for nothing.
+> - **No source maps in `dist/`:** production builds skip them to keep the committed build small. `npm run dev`
+>   still writes them.
+> - **Then update web-app:** run `yarn upgrade @d-i-t-a/reader` there and commit its `yarn.lock`. Until then
+>   web-app keeps building the previous commit.
+
 # Introduction
 **R2D2BC** is an implementation of the [Readium v2](https://github.com/readium/architecture) EPUB reader for the web.
 It is built as a modular toolkit (rather than a full-featured app) so that applications can use it to 
